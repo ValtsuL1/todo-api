@@ -2,6 +2,7 @@ from datetime import datetime
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
 import sqlite3
+from fastapi.middleware.cors import CORSMiddleware
 
 con = sqlite3.connect("todos.sqlite", check_same_thread=False)
 
@@ -22,6 +23,14 @@ class NewTodoItem(BaseModel):
     description: str
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 @app.on_event("shutdown")
 def database_disconnect():
