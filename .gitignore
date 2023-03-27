@@ -1,2 +1,4 @@
 .venv
 todos.sqlite
+.env
+test.py

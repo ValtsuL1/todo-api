@@ -1,8 +1,15 @@
 from datetime import datetime
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Request
 from pydantic import BaseModel
 import sqlite3
 from fastapi.middleware.cors import CORSMiddleware
+import os
+import requests as req
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=".env")
+
+api_key = os.environ.get("API_KEY")
 
 con = sqlite3.connect("todos.sqlite", check_same_thread=False)
 
@@ -149,7 +156,7 @@ def update_todo_status(id: int, done: bool, response: Response):
         return {"err": str(e)}
 
 @app.delete('/todos/{id}')
-def delete_todo(id:int, response: Response):
+def delete_todo(id: int, response: Response):
     try:
         with con:
             cur = con.execute("DELETE FROM todo WHERE id = ?", (id,))
@@ -159,6 +166,32 @@ def delete_todo(id:int, response: Response):
                 return {"err": f"Can't delete todo item, id {id} does not exist."}
             
             return "ok"
+        
+    except Exception as e:
+        response.status_code = 500
+        return {"err": str(e)}
+    
+@app.get('/weather')
+def get_current_weather(country: str, response: Response):
+    try:
+        # hakee pituus ja leveysasteet annetulle kaupungille
+        location = req.get(f'http://api.openweathermap.org/geo/1.0/direct?q={country}&limit=1&appid={api_key}')
+
+        location = location.json()
+
+        # tallentaa pituus ja leveysasteet omiin muuttujiinsa
+        lat = location[0]['lat']
+        lon = location[0]['lon']
+
+        # hakee säätiedot
+        result = req.get(f'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={api_key}')
+
+        result = result.json()
+
+        weather = f'Lämpötila: {result["main"]["temp"]} °C Kosteus: {result["main"]["humidity"]} % Ilmanpaine: {result["main"]["pressure"]} hPa Tuulennopeus: {result["wind"]["speed"]} m/s'
+
+        return weather
+
     except Exception as e:
         response.status_code = 500
         return {"err": str(e)}
