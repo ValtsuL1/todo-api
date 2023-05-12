@@ -36,7 +36,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 @app.on_event("shutdown")
@@ -60,7 +60,7 @@ def get_todos(response:Response, done: bool | None = None):
                 
                 values.append(todo)
 
-                return values
+            return values
             
     except Exception as e:
         response.status_code = 500
